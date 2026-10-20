@@ -129,6 +129,32 @@ services:
       - backend_net
       - monitoring_net
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: gym_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring_net
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: gym_promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring_net
+
 networks:
   frontend_net:
     driver: bridge
